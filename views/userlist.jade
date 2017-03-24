@@ -1,0 +1,19 @@
+extends layout
+
+block content
+    h1.
+        User List and Login <br />
+
+    form#formAddUser(name="validuser",method="post",action="/validuser")
+        input#inputUserName(type="text", placeholder="username", name="username")
+        input#inputUserPass(type="text", placeholder="userpass", name="userpass")
+        button#btnSubmit(type="submit") login
+
+    ul
+        each x, i in userlist
+            li user: #{x.user}
+            li pass: #{x.pass}
+            p <br />
+    a(href="http://localhost:3000/newuser ") Add User
+    p <br />
+    a(href="http://localhost:3000") Go Home
