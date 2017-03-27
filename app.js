@@ -24,6 +24,13 @@ var bodyParser = require('body-parser');
 var mongo = require('mongodb');
 var monk = require('monk');
 var db = monk('localhost:27017/basicapp');
+var mongoose = require('mongoose');
+
+// Passport stuff
+var passport = require('passport')  
+var LocalStrategy = require('passport-local').Strategy;
+var flash = require('connect-flash');  
+//var session = require('express-session')
 
 //var index = require('./routes/index'); // var routes?
 var routes = require('./routes/index');
@@ -40,13 +47,36 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser('tester')); // @@@ Needs an argument to enable secret
+// @@@ \/ Not secure, change to backend session IRL!!!
+//app.use(cookieSession());
+//app.use(express.session());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(flash());
+
+var User = require('./models/user');
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+
+var initPassport = require('./authentication/init');//(passport);
+//initPassport(passport);
+
 
 // Make our db accessible to our router
 app.use(function(req,res,next){ // @@@ Not optimized!!!
     req.db = db;
     next();
+});
+
+// Connect Mongoose to DB
+mongoose.connect('localhost:27017/basicapp', function(err) {
+  if (err) {
+    console.log('Unable to connect to DB!');
+  }
 });
 
 app.use('/', routes);

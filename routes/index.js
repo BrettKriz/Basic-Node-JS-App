@@ -1,5 +1,9 @@
 var express = require('express');
 var router = express.Router();
+var passport = require('passport')  
+var LocalStrategy = require('passport-local').Strategy;
+var passportLocalMongoose = require('passport-local-mongoose');
+var User = require('../models/user'); 
 
 /* GET Home page. */
 router.get('/', function(req, res, next) {
@@ -21,12 +25,18 @@ router.get('/userlist', function(req, res) {
     var db = req.db;
     var collection = db.get('usercollection');
 	
+	res.render('userlist', {
+			title: 'The Login Page'
+        });
+	
+	/*
     collection.find({},{},function(e, docs){
         res.render('userlist', {
             "userlist" : docs,
 			title: 'The User List'
         });
     });
+	*/
 });
 
 /* GET New User page. */
@@ -42,13 +52,24 @@ router.get('/validuser', function(req, res) {
 /* POST to Add User Service */
 router.post('/adduser', function(req, res) {
 
+	
+	// USE MONGOOSE REGISTRATION!!!!!!!!
     // Set our internal DB variable
     var db = req.db;
 
     // Get our form values. These rely on the "name" attributes
     var userName = req.body.username;
     var userPass = req.body.userpass;
-
+	
+	User.register( new User({username: userName}), userPass, function(err) {
+		if (err){
+			console.log('Registration Error', err);
+			return;
+		}else{
+			res.redirect("userlist");
+		}
+	});
+/*
     // Set our collection
     var collection = db.get('usercollection');
 
@@ -65,22 +86,26 @@ router.post('/adduser', function(req, res) {
             res.redirect("userlist");
         }
     });
+	*/
 });
 
 /* POST to Validate User Service */
-router.post('/validuser', function(req, res) {
+router.post('/validuser2', function(req, res) {
 
     // Set our internal DB variable
     var db = req.db;
 
     // Get our form values. These rely on the "name" attributes
     var userName = req.body.username;
-    var userPass = req.body.userpass;
+    var userPass = req.body.password;
 
     // Set our collection
     var collection = db.get('usercollection');
-	// Passport prolly should go here instead...
+	
+	
     collection.find({user: userName, pass: userPass}, {}, function(e, docs){
+		// Passport prolly should go here instead...
+		
 		if (e != null || (docs != null && docs.length < 1)){
 			// Search failed
 			//res.send("Credentials could not be validated!");
@@ -95,4 +120,25 @@ router.post('/validuser', function(req, res) {
 });
 
 
+/* Handle Login POST //https://code.tutsplus.com/tutorials/authenticating-nodejs-applications-with-passport--cms-21619
+  router.post('/login', passport.authenticate('login', {
+    successRedirect: '/home',
+    failureRedirect: '/',
+    failureFlash : true 
+  }));
+ */
+
+// TESTER FUNCTION
+router.post('/validuser', passport.authenticate('local', {
+    successRedirect: '/helloworld', // Use somethin...
+    failureRedirect: '/loginfail',
+    failureFlash : false 
+  }));
+
 module.exports = router;
+/*
+module.exports = {
+	router,
+	function(passport)
+}
+*/
